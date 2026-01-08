@@ -220,25 +220,40 @@ class QdrantManager:
             # Convert numpy array to list
             query_vec = query_vector.tolist() if isinstance(query_vector, np.ndarray) else query_vector
             
+            # Search for more results to account for potential duplicates
+            # Request 3x the desired results to ensure we have enough unique ones
+            search_limit = top_k * 3
+            
             # Perform search using search method
             search_results = self.client.search(
                 collection_name=collection_name,
                 query_vector=query_vec,
-                limit=top_k,
+                limit=search_limit,
                 score_threshold=score_threshold,
                 query_filter=filter_condition,
                 with_payload=True,
                 with_vectors=False
             )
             
-            # Format results (search() returns a list of ScoredPoint objects)
+            # Format results and deduplicate by text content
             results = []
+            seen_texts = set()
+            
             for result in search_results:
-                results.append({
-                    "id": result.id,
-                    "score": result.score,
-                    "payload": result.payload
-                })
+                text = result.payload.get("text", "") if result.payload else ""
+                
+                # Skip if we've already seen this exact text
+                if text and text not in seen_texts:
+                    results.append({
+                        "id": result.id,
+                        "score": result.score,
+                        "payload": result.payload
+                    })
+                    seen_texts.add(text)
+                    
+                    # Stop when we have enough unique results
+                    if len(results) >= top_k:
+                        break
             
             return results
             
