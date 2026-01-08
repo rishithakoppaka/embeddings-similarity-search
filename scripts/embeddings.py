@@ -297,13 +297,18 @@ def generate_sample_sentences(count: int = 510) -> List[str]:
             if base not in sentences:
                 sentences.append(base)
             
-            # Add variations
-            if len(sentences) < count:
-                sentences.append(f"Note that {base.lower()}")
-            if len(sentences) < count:
-                sentences.append(f"It is important to understand that {base.lower()}")
-            if len(sentences) < count:
-                sentences.append(f"One should consider that {base.lower()}")
+            # Add variations (check for duplicates)
+            variation1 = f"Note that {base.lower()}"
+            if len(sentences) < count and variation1 not in sentences:
+                sentences.append(variation1)
+            
+            variation2 = f"It is important to understand that {base.lower()}"
+            if len(sentences) < count and variation2 not in sentences:
+                sentences.append(variation2)
+            
+            variation3 = f"One should consider that {base.lower()}"
+            if len(sentences) < count and variation3 not in sentences:
+                sentences.append(variation3)
     
     return sentences[:count]
 

@@ -123,15 +123,25 @@ def find_top_k_similar(query_vector: np.ndarray,
     # Calculate similarities for all candidates
     similarities = cosine_similarity_batch(query_vector, candidate_vectors)
     
-    # Get top-k indices (argsort returns ascending, so reverse)
-    top_k_indices = np.argsort(similarities)[::-1][:k]
+    # Get all indices sorted by similarity (descending)
+    sorted_indices = np.argsort(similarities)[::-1]
     
-    # Build results list
+    # Build results list, removing duplicates
     results = []
-    for idx in top_k_indices:
+    seen_texts = set()
+    
+    for idx in sorted_indices:
         text = candidate_texts[idx]
         score = float(similarities[idx])
-        results.append((text, score, int(idx)))
+        
+        # Skip if we've already seen this exact text
+        if text not in seen_texts:
+            results.append((text, score, int(idx)))
+            seen_texts.add(text)
+            
+            # Stop when we have k unique results
+            if len(results) >= k:
+                break
     
     return results
 
